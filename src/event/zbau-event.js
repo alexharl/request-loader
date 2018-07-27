@@ -4,6 +4,7 @@ const _CURRENT_YEAR = moment().year();
 
 module.exports = class ZBauEvent extends BaseEvent {
     static get LIST_CONTAINER() { return '.event' }; // hier wie der standard, siehe rakete event da ists anders
+    
     constructor(id) {
       super(id, "zbau");
       this.minimumAge = null;
@@ -11,7 +12,6 @@ module.exports = class ZBauEvent extends BaseEvent {
       this.location.internal_locations = [];
     }
     
-  
     static parse($, container) {
       const e = new ZBauEvent();
   
