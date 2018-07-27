@@ -1,6 +1,6 @@
-const SimpleEventScraper = require('./simple-event-scraper.js');
-const ZBauEvent = require('./event/zbau-event');
-const RaketeEvent = require('./event/rakete-event');
+const SimpleEventScraper = require('./src/simple-event-scraper.js');
+const ZBauEvent = require('./src/event/zbau-event');
+const RaketeEvent = require('./src/event/rakete-event');
 
 /* javascript magic, damit ich ne async function direkt aufrufen kann */
 (async function () {
