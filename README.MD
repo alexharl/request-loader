@@ -27,7 +27,7 @@ const result = await RequestLoader.exec('https://randomuser.me/api/').catch(erro
 You can also instantiate **`RequestLoader`** by simply passing the endpoints uri as a parameter :
 ```
 const rl = new RequestLoader('https://randomuser.me/api/');
-const result = rl.loadData();
+const result = rl.exec();
 ```
 
 **Q**: Why is `exec` not used here ?  
