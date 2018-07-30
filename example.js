@@ -1,13 +1,18 @@
-const RequestLoader = require('./dist/request-loader');
-const RaketeEventStrategy = require('./dist/strategies/custom-strategies/event/rakete-nbg-event.strategy');
-const ZBauEventStrategy = require('./dist/strategies/custom-strategies/event/zbau-nbg-event.strategy');
+const RequestLoader = require("./dist/request-loader");
+const RaketeEventStrategy = require("./dist/strategies/custom-strategies/event/rakete-nbg-event.strategy");
+const ZBauEventStrategy = require("./dist/strategies/custom-strategies/event/zbau-nbg-event.strategy");
+const DesiEventStrategy=require('./dist/strategies/custom-strategies/event/desi-nbg-event.strategy');
 
-(async function () {
+(async function() {
   /* Basic use with static function */
-  const result = await RequestLoader.RequestLoader.exec('https://randomuser.me/api/');
+  const result = await RequestLoader.RequestLoader.exec(
+    "https://randomuser.me/api/"
+  );
 
   /* Instantiate RequestLoader with default strategy */
-  const json_loader = new RequestLoader.RequestLoader('https://randomuser.me/api/');
+  const json_loader = new RequestLoader.RequestLoader(
+    "https://randomuser.me/api/"
+  );
   const json_loader_result = await json_loader.exec(); // execute with strategy
 
   /* Using a custom strategy */
@@ -20,12 +25,21 @@ const ZBauEventStrategy = require('./dist/strategies/custom-strategies/event/zba
   event_scraper.strategy = rakete_scraper_strategy;
   const rakete_events = await event_scraper.exec();
 
+  desi_scraper_strategy = new DesiEventStrategy.DesiEventStrategy();
+  event_scraper.strategy = desi_scraper_strategy;
+  const desi_events = await event_scraper.exec();
+  console.log(
+    JSON.stringify({
+      
+      events: desi_events
+    },null,4)
+  );
   /* print result */
-  console.log(JSON.stringify({
-    staticLoaderResult: result,
-    instanceResult: json_loader_result,
-    events: [
-      zbau_events.concat(rakete_events)
-    ]
-  }));
-})()
+  // console.log(
+  //   JSON.stringify({
+  //     staticLoaderResult: result,
+  //     instanceResult: json_loader_result,
+  //     events: [zbau_events.concat(rakete_events)]
+  //   })
+  // );
+})();
