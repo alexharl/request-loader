@@ -77,3 +77,5 @@ export namespace BaseEvent {
         uri: string;
     }
 }
+
+
