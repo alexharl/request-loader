@@ -1,10 +1,10 @@
 import * as _ from 'lodash';
 
-interface Tag {
+export interface Tag {
   id: string;
   name: string;
 }
-class Tagger {
+export class Tagger {
   private readonly tag: Tag;
   constructor(
     public id: string,
@@ -25,25 +25,28 @@ class Tagger {
   each(iterate: (data: any) => boolean) {
     this.iterate = iterate;
   }
-  tagData(data: any[]) {
+  exec(data: any[]) {
     return _.filter(data, item => {
       // base check
       let tagged = this.iterate ? this.iterate(item, this.tag) : false;
-      //iterate paths
-      for (let path of this.checkPaths) {
-        const value = _.get(item, path);
-        //iterate regexps
-        for (let regExp of this.regExps) {
-          if (Array.isArray(value)) {
-            //iterate array values
-            for (let arrVal of value) {
-              tagged = arrVal.test(regExp);
+
+      if (!tagged) {
+        //iterate paths
+        for (let path of this.checkPaths) {
+          const value = _.get(item, path);
+          //iterate regexps
+          for (let regExp of this.regExps) {
+            if (Array.isArray(value)) {
+              //iterate array values
+              for (let arrVal of value) {
+                tagged = arrVal.test(regExp);
+                if (tagged) break;
+              }
+            } else {
+              //iterate single value
+              tagged = value.test(regExp);
               if (tagged) break;
             }
-          } else {
-            //iterate single value
-            tagged = value.test(regExp);
-            if (tagged) break;
           }
         }
       }
@@ -58,7 +61,3 @@ class Tagger {
     });
   }
 }
-
-const dubTagger = new Tagger('genre-dub', 'Dub', 'tags', ['title', 'subtitle', 'description'], [/dub/, /dub/], (item: any, tag: Tag) => {
-  return false;
-});
