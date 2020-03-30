@@ -1,6 +1,6 @@
 import * as _ from 'lodash';
 
-export interface Tag {
+interface Tag {
   id: string;
   name: string;
 }
@@ -39,12 +39,12 @@ export class Tagger {
             if (Array.isArray(value)) {
               //iterate array values
               for (let arrVal of value) {
-                tagged = arrVal.test(regExp);
+                tagged = regExp.test(arrVal);
                 if (tagged) break;
               }
             } else {
               //iterate single value
-              tagged = value.test(regExp);
+              tagged = regExp.test(value);
               if (tagged) break;
             }
           }
@@ -53,8 +53,11 @@ export class Tagger {
 
       if (tagged) {
         /* add tag */
-        const tags = _.get(item, this.tagPath);
-        if (!tags) _.set(item, this.tagPath, []);
+        let tags = _.get(item, this.tagPath);
+        if (!tags) {
+          _.set(item, this.tagPath, []);
+          tags = _.get(item, this.tagPath);
+        }
         tags.push(this.tag);
         return true;
       }
