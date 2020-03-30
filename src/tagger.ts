@@ -61,4 +61,5 @@ export class Tagger {
         return true;
       }
     });
+  }
 }
