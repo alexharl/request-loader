@@ -28,85 +28,96 @@ import { BaseEvent } from './event.model';
 import * as moment from 'moment';
 
 export class ZBauEventStrategy extends CheerioStrategy {
-    public _CURRENT_YEAR = moment().year();
+  public _CURRENT_YEAR = moment().year();
 
-    constructor() {
-        super("https://z-bau.com/programm");
+  constructor() {
+    super('https://z-bau.com/programm');
+  }
+
+  parse($: any) {
+    if (!$) throw new Error('could not load events.');
+
+    let events = [];
+    /* iterate event containers */
+    $('.event').each((i, elem) => {
+      const event = this.parseEvent($, elem);
+      if (event) events.push(event); // add event to events array
+    });
+
+    return events;
+  }
+
+  private getTextFromNode($, dom, selector) {
+    return $(dom)
+      .find(selector)
+      .text()
+      .trim();
+  }
+
+  private parseEvent($, container) {
+    const e = new BaseEvent('zbau');
+
+    /* title, subtitle */
+    e.title = this.getTextFromNode($, container, '.event__main-title');
+    e.subtitle = this.getTextFromNode($, container, '.event__sub-title');
+
+    /* description */
+    e.description = this.getTextFromNode($, container, '.event__info-text');
+
+    /* parse date  */
+    const day = this.getTextFromNode($, container, '.event__day').slice(-6); // z.B = 'So 25.07'; slice -> '25.07'
+    const admittance = this.getTextFromNode($, container, '.event__einlass'); // 18:30
+    const start = this.getTextFromNode($, container, '.event__beginn'); // 19:00
+
+    const dayPrefix = `${day}.${this._CURRENT_YEAR} `; // '25.07.2018'
+    const dateFormat = 'DD.MM.YYYY HH:mm';
+    e.date = <BaseEvent.DateInfo>{
+      start: moment(dayPrefix + start, dateFormat).unix(),
+      admittance: admittance ? moment(dayPrefix + admittance, dateFormat).unix() : null
+    };
+
+    /* url */
+    e.url = $(container).attr('data-url');
+
+    e.additionalInfo = {
+      internal_locations: [],
+      price: null,
+      age: null
+    };
+
+    /* location
+     *  Interne locations wie galerie / roter salon usw stehen hier mit komma getrennt drin
+     *  */
+    const locationsStr = this.getTextFromNode($, container, '.event__location');
+    const locationsSplit = locationsStr.split(',');
+    for (let location of locationsSplit) {
+      const locStr = location.trim();
+      e.additionalInfo.internal_locations.push(locStr);
     }
 
-    parse($: any) {
-        if (!$) throw new Error('could not load events.');
+    /* preis */
+    e.additionalInfo.price = this.getTextFromNode($, container, '.event__eintritt')
+      .replace(/Tickets\n/g, ' ')
+      .trim();
 
-        let events = [];
-        /* iterate event containers */
-        $('.event').each((i, elem) => {
-            const event = this.parseEvent($, elem);
-            if (event) events.push(event); // add event to events array
-        });
-
-        return events;
+    /* alter */
+    const age = parseInt(this.getTextFromNode($, container, '.event__alter'));
+    if (age) {
+      e.additionalInfo.age = age;
     }
 
-    private parseEvent($, container) {
-        const e = new BaseEvent('zbau');
-
-        /* title, subtitle */
-        e.title = $(container).find('.event__main-title').text().trim();
-        e.subtitle = $(container).find('.event__sub-title').text().trim();
-
-        /* description */
-        e.description = $(container).find('.event__info-text').text().trim();
-
-        /* parse date  */
-        const day = $(container).find('.event__day').text().trim().slice(-6); // z.B = 'So 25.07'; slice -> '25.07'  
-        const admittance = $(container).find('.event__einlass').text().trim(); // 18:30
-        const start = $(container).find('.event__beginn').text().trim(); // 19:00
-
-        const dayPrefix = `${day}.${this._CURRENT_YEAR} `; // '25.07.2018'
-        const dateFormat = 'DD.MM.YYYY HH:mm';
-        e.date = <BaseEvent.DateInfo>{
-            start: moment(dayPrefix + start, dateFormat).unix(),
-            admittance: admittance ? moment(dayPrefix + admittance, dateFormat).unix() : null
-        }
-
-        /* url */
-        e.url = $(container).attr('data-url');
-
-        e.additionalInfo = {
-            internal_locations: [],
-            price: null,
-            age: null
-        }
-
-        /* location
-        *  Interne locations wie galerie / roter salon usw stehen hier mit komma getrennt drin
-        *  */
-        const locationsStr = $(container).find('.event__location').text().trim();
-        const locationsSplit = locationsStr.split(',');
-        for (let location of locationsSplit) {
-            const locStr = location.trim();
-            e.additionalInfo.internal_locations.push(locStr);
-        }
-
-        /* preis */
-        e.additionalInfo.price = $(container).find('.event__eintritt').text().replace(/Tickets\n/g, " ").trim();
-
-        /* alter */
-        const age = parseInt($(container).find('.event__alter').text().trim());
-        if (age) {
-            e.additionalInfo.age = age;
-        };
-
-        /* media */
-        const imageUri = $(container).find('.event__image').attr('data-src');
-        if (imageUri) {
-            const eventMedia: BaseEvent.Media = {
-                type: BaseEvent.MediaType.IMAGE,
-                uri: imageUri
-            }
-            e.media = [eventMedia];
-        }
-
-        return e;
+    /* media */
+    const imageUri = $(container)
+      .find('.event__image')
+      .attr('data-src');
+    if (imageUri) {
+      const eventMedia: BaseEvent.Media = {
+        type: BaseEvent.MediaType.IMAGE,
+        uri: imageUri
+      };
+      e.media = [eventMedia];
     }
+
+    return e;
+  }
 }
