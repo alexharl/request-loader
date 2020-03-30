@@ -4,23 +4,20 @@ interface Tag {
   id: string;
   name: string;
 }
+
 export class Tagger {
   private readonly tag: Tag;
   constructor(
     public id: string,
     public name: string,
     public tagPath: string,
-    public checkPaths: string[] = [],
-    public regExps: RegExp[] = [],
+    public regexPathMap: { [path: string]: RegExp[] },
     public iterate: (data: any, tag: Tag) => boolean
   ) {
     this.tag = { id, name };
   }
-  regExp(regExps: RegExp[] = []) {
-    this.regExps.push(...regExps);
-  }
-  paths(checkPaths: string[] = []) {
-    this.checkPaths.push(...checkPaths);
+  regExp(path: string, regExps: RegExp[] = []) {
+    this.regexPathMap[path].push(...regExps);
   }
   each(iterate: (data: any) => boolean) {
     this.iterate = iterate;
@@ -28,23 +25,25 @@ export class Tagger {
   exec(data: any[]) {
     return _.filter(data, item => {
       // base check
-      let tagged = this.iterate ? this.iterate(item, this.tag) : false;
-
+      let tagged: any = this.iterate ? this.iterate(item, this.tag) : false;
       if (!tagged) {
         //iterate paths
-        for (let path of this.checkPaths) {
+        for (let path in this.regexPathMap) {
           const value = _.get(item, path);
+          const regExps = this.regexPathMap[path];
           //iterate regexps
-          for (let regExp of this.regExps) {
+          for (let regExp of regExps) {
             if (Array.isArray(value)) {
               //iterate array values
               for (let arrVal of value) {
-                tagged = regExp.test(arrVal);
+                const match = regExp.test(arrVal);
+                match && (tagged = value);
                 if (tagged) break;
               }
             } else {
               //iterate single value
-              tagged = regExp.test(value);
+              const match = regExp.test(value);
+              match && (tagged = value);
               if (tagged) break;
             }
           }
@@ -62,5 +61,4 @@ export class Tagger {
         return true;
       }
     });
-  }
 }

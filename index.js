@@ -11,15 +11,26 @@ async function scrape() {
   return zbau_events;
 }
 
-const dubTagger = new Tagger.Tagger('genre-dub', 'Dub', 'tags', ['title', 'subtitle', 'description'], [/dub/, /dub/], (item, tag) => {
+const dubTagger = new Tagger.Tagger('genre-dub', 'Dub', 'tags', { title: [/dub[^step]/gi], subtitle: [/dub[^step]/gi], description: [/dub[^step]/gi] }, (item, tag) => {
   return false;
 });
 
+const monstersTagger = new Tagger.Tagger(
+  'monsters-of-jungle',
+  'Monsters Of Junge',
+  'tags',
+  { title: [/monsters.of.jungle/gi], subtitle: [/monsters.of.jungle/gi], description: [/monsters.of.jungle/gi] },
+  (item, tag) => {
+    return false;
+  }
+);
+
 function tag(data) {
   dubTagger.exec(data);
-  const filtered = _.filter(data, item => !!_.find(item.tags, { id: 'genre-dub' }));
-  console.log(JSON.stringify(filtered));
-  return filtered;
+  monstersTagger.exec(data);
+  const dub = _.filter(data, item => !!_.find(item.tags, { id: monstersTagger.id }));
+  const monsters = _.filter(data, item => !!_.find(item.tags, { id: monstersTagger.id }));
+  console.log(JSON.stringify(data, null, 4));
 }
 
 scrape().then(tag);
